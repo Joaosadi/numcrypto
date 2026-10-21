@@ -12,7 +12,7 @@ app = FastAPI(title="DashCrypto API", version="1.0")
 # Libera o CORS para o Next.js conseguir conversar com o FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://numcrypto.vercel.app/"],
+    allow_origins=["http://localhost:3000", "https://numcrypto.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
