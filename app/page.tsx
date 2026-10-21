@@ -41,18 +41,14 @@ export default function Home() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Banner / Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-800 pb-6 gap-4">
-          <div>
+        <header className="flex flex-col items-center justify-between border-b border-gray-800 pb-6 gap-4">
+          <div className="text-center">
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-              DashCrypto
+              NumCrypto
             </h1>
             <p className="text-gray-400 text-sm mt-1">
-              Plataforma Quantitativa & Análise de Crypto
+              Quantitative metrics and models for cryptoassets analysis
             </p>
-          </div>
-          <div className="flex items-center space-x-2 text-xs bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-full w-fit">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>FastAPI Backend Online</span>
           </div>
         </header>
 
