@@ -1,4 +1,4 @@
-name: Pudate BTC price daily
+name: Update BTC price daily
 
 on:
   schedule:
@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests supabase python-dotenv
 
-      - name: Executar Script de Atualização
+      - name: Execute script
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
