@@ -1,6 +1,6 @@
 // components/RegressionChart.tsx
 'use client'
-
+import { CHART_COLORS } from '@/constants/colors'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -8,7 +8,8 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid
+  CartesianGrid,
+  Legend
 } from 'recharts'
 
 interface SeriesConfig {
@@ -53,13 +54,13 @@ export default function RegressionChart({
               
               <XAxis
                 dataKey={xAxisDataKey}
-                stroke="#9CA3AF"
+                stroke={CHART_COLORS.xaxis}
                 tick={{ fontSize: 12 }}
                 minTickGap={30}
               />
 
               <YAxis
-                stroke="#9CA3AF"
+                stroke={CHART_COLORS.yaxis}
                 scale="log"
                 domain={['auto', 'auto']}
                 allowDataOverflow={true}
@@ -94,7 +95,19 @@ export default function RegressionChart({
                   dot={false}
                   activeDot={{ r: 6 }}
                 />
+
+
               ))}
+
+              <Legend
+                verticalAlign="bottom"
+                align="center"
+                wrapperStyle={{
+                    paddingTop: '16px',
+                    fontSize: '12px',
+                    color: '#9CA3AF'
+                  }}
+              />
             </ComposedChart>
           </ResponsiveContainer>
         )}

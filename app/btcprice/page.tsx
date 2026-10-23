@@ -2,8 +2,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import RegressionChart from '@/components/RegressionChart'
 import RainbowChart from '@/components/RainbowChart'
+import DifferenceChart from '@/components/DifferenceChart'
+
+import { CHART_COLORS } from '@/constants/colors'
 
 export default function BtcPricePage() {
   const [data, setData] = useState<any[]>([])
@@ -62,14 +66,23 @@ export default function BtcPricePage() {
         title="Bitcoin Price vs Fair Value"
         data={data}
         series={[
-          { dataKey: 'close', name: 'BTC Price', color: '#10B981' },
-          { dataKey: 'fair_value', name: 'Fair Value', color: '#fffc46', strokeWidth: 2 },
-          { dataKey: 'overvalued', name: 'Fair Value', color: '#d60925', strokeWidth: 2 },
-          { dataKey: 'non_bubble', name: 'Fair Value', color: '#07a9d1', strokeWidth: 2 }
+          { dataKey: 'close', name: 'BTC Price', color: CHART_COLORS.price },
+          { dataKey: 'fair_value', name: 'Fair Value', color: CHART_COLORS.fairValue, strokeWidth: 2 },
+          { dataKey: 'overvalued', name: 'Overvalued', color: '#d60925', strokeWidth: 2 },
+          { dataKey: 'non_bubble', name: 'Non bubble', color: '#07a9d1', strokeWidth: 2 }
         ]}
       />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Gráfico 1: Arco-Íris */}
+        <div className="w-full">
+          <RainbowChart data={data} />
+        </div>
 
-      <RainbowChart data={data} />
+        {/* Gráfico 2: Diferença com Eixo Duplo */}
+        <div className="w-full">
+          <DifferenceChart data={data} />
+        </div>
+      </div>
 
     </main>
   )
