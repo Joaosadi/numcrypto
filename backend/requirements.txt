@@ -2,3 +2,7 @@ fastapi
 uvicorn
 supabase
 python-dotenv
+pandas
+numpy
+requests
+scipy
