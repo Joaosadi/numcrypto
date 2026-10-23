@@ -16,7 +16,7 @@ jobs:
       - name: Python config
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Dependencies
         run: |
@@ -27,4 +27,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python -m backend/update_btc.py
+        run: python backend/update_btc.py
