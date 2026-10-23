@@ -2,7 +2,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ReusableChart from '@/components/ReusableChart'
+import RegressionChart from '@/components/RegressionChart'
+import RainbowChart from '@/components/RainbowChart'
 
 export default function BtcPricePage() {
   const [data, setData] = useState<any[]>([])
@@ -52,30 +53,24 @@ export default function BtcPricePage() {
           Bitcoin Quantitative & Price Analysis
         </h1>
         <p className="text-gray-400 mt-2">
-          Historical prices, logarithmic regression, and volatility metrics
+          Logarithmic regression, returns and volatility metrics
         </p>
       </div>
 
       {/* Chart 1: Price vs Fair Value (Logarithmic Scale) */}
-      <ReusableChart
-        title="Bitcoin Price vs Fair Value (Logarithmic Scale)"
+      <RegressionChart
+        title="Bitcoin Price vs Fair Value"
         data={data}
         series={[
           { dataKey: 'close', name: 'BTC Price', color: '#10B981' },
-          { dataKey: 'log_fair_value', name: 'Fair Value', color: '#3B82F6', strokeWidth: 2 }
+          { dataKey: 'fair_value', name: 'Fair Value', color: '#fffc46', strokeWidth: 2 },
+          { dataKey: 'overvalued', name: 'Fair Value', color: '#d60925', strokeWidth: 2 },
+          { dataKey: 'non_bubble', name: 'Fair Value', color: '#07a9d1', strokeWidth: 2 }
         ]}
       />
 
-      {/* Chart 2: Volatility Metrics */}
-      <ReusableChart
-        title="Volatility Metrics (7d vs 30d)"
-        data={data}
-        yAxisFormatter={(val) => `${Number(val).toFixed(2)}%`}
-        series={[
-          { dataKey: 'volatility_7d', name: 'Volatility 7d', color: '#F59E0B' },
-          { dataKey: 'volatility_30d', name: 'Volatility 30d', color: '#EF4444' }
-        ]}
-      />
+      <RainbowChart data={data} />
+
     </main>
   )
 }
