@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Carrega as variáveis do arquivo .env local do python
 load_dotenv()
 
-app = FastAPI(title="DashCrypto API", version="1.0")
+app = FastAPI(title="numcrypto API", version="1.0")
 
 # Libera o CORS para o Next.js conseguir conversar com o FastAPI
 app.add_middleware(
@@ -95,4 +95,39 @@ def get_btc_summary():
         }
     except Exception as e:
         print(f"ERRO NO /api/btc-summary: {str(e)}") # Imprime o erro real no terminal do FastAPI
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/btc-all")
+def get_btc_all():
+    """Busca toda a tabela btc_daily do Supabase com paginação para contornar o limite de 1000 linhas"""
+    try:
+        all_data = []
+        batch_size = 1000
+        start = 0
+        
+        while True:
+            response = supabase.table("btc_daily") \
+                .select("*") \
+                .order("time_close", desc=False) \
+                .range(start, start + batch_size - 1) \
+                .execute()
+            
+            chunk = response.data
+            if not chunk:
+                break
+                
+            all_data.extend(chunk)
+            
+            if len(chunk) < batch_size:
+                break
+                
+            start += batch_size
+
+        return {
+            "success": True, 
+            "total_records": len(all_data),
+            "data": all_data
+        }
+    except Exception as e:
         return {"success": False, "error": str(e)}
