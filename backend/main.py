@@ -1,8 +1,9 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import pandas as pd
 
 # Carrega as variáveis do arquivo .env local do python
 load_dotenv()
@@ -128,6 +129,42 @@ def get_btc_all():
             "success": True, 
             "total_records": len(all_data),
             "data": all_data
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/btc-yearly-returns")
+def get_btc_returns(years: int = Query(default=4, ge=1, le=10)):
+    """
+    Calcula o retorno acumulado de N anos do Bitcoin para toda a série histórica.
+    """
+    try:
+
+        df = pd.DataFrame(fetch_btc_price()["data"])
+        df["time_close"] = pd.to_datetime(df["time_close"])
+        df["close"] = pd.to_numeric(df["close"])
+        df = df.sort_values("time_close").reset_index(drop=True)
+
+        # Período de deslocamento em dias (aproximação para N anos)
+        shift_periods = int(years * 365)
+
+        # Cálculo correto da porcentagem de retorno acumulado
+        df["returnPct"] = ((df["close"] / df["close"].shift(shift_periods)) - 1) * 100
+
+        # Remove as linhas iniciais onde o shift resulta em NaN (ex: primeiros anos sem histórico prévio)
+        df = df.dropna(subset=["returnPct"])
+
+        # Formata a data para string para o JSON processar perfeitamente
+        df["time_close"] = df["time_close"].dt.strftime('%Y-%m-%d')
+
+        # Converte o DataFrame limpo em uma lista de dicionários (formato ideal para API)
+        results = df[["time_close", "close", "returnPct"]].to_dict(orient="records")
+
+        return {
+            "success": True,
+            "years": years,
+            "data": results
         }
     except Exception as e:
         return {"success": False, "error": str(e)}

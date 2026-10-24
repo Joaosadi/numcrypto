@@ -1,6 +1,8 @@
 // components/PriceChart.tsx
 'use client'
 
+import { CHART_CONFIG } from '@/constants/charts'
+
 import { useEffect, useState, useMemo } from 'react'
 import {
   AreaChart,
@@ -131,23 +133,24 @@ export default function PriceChart() {
       </div>
 
       {/* Area Chart Rendering */}
-      <div className="w-full h-[400px]">
+      <div className="w-full h-[420px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+          <AreaChart data={data} margin={CHART_CONFIG.defaultMargins}>
             <defs>
               <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
                 <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+            <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fontSize: 12 }} interval="preserveStartEnd" />
             <YAxis
               stroke="#9CA3AF"
               scale={scaleType}
               domain={['auto', 'auto']}
               allowDataOverflow={true}
-              tick={{ fontSize: 11 }}
-              tickFormatter={(val: number) => `$${Number(val).toLocaleString()}`}
+              tick={{ fontSize: 10 }}
+              tickFormatter={(val) => `$${Number(val).toLocaleString('en-US', { notation: 'compact' })}`}
+              width = {40}
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', borderColor: '#374151', borderRadius: '8px', color: '#FFF' }}

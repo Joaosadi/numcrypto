@@ -1,6 +1,8 @@
 // components/RegressionChart.tsx
 'use client'
 import { CHART_COLORS } from '@/constants/colors'
+import { CHART_CONFIG } from '@/constants/charts'
+import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -49,24 +51,15 @@ export default function RegressionChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+            <ComposedChart data={data} margin={CHART_CONFIG.defaultMargins}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
               
-              <XAxis
+              <DefaultXAxis
                 dataKey={xAxisDataKey}
-                stroke={CHART_COLORS.xaxis}
-                tick={{ fontSize: 12 }}
-                minTickGap={30}
               />
 
-              <YAxis
-                stroke={CHART_COLORS.yaxis}
-                scale="log"
-                domain={['auto', 'auto']}
-                allowDataOverflow={true}
-                tick={{ fontSize: 12 }}
-                tickFormatter={yAxisFormatter}
-                orientation="left"
+              <DefaultYAxis
+                yAxisId="left"
               />
 
               <Tooltip
@@ -86,6 +79,7 @@ export default function RegressionChart({
               {/* Renderiza dinamicamente as linhas configuradas (Ex: Preço e Regressão) */}
               {series.map((s, index) => (
                 <Line
+                  yAxisId="left"
                   key={index}
                   type="monotone"
                   dataKey={s.dataKey}

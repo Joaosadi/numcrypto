@@ -3,9 +3,9 @@
 
 import { useEffect, useState } from 'react'
 
-import RegressionChart from '@/components/RegressionChart'
-import RainbowChart from '@/components/RainbowChart'
-import DifferenceChart from '@/components/DifferenceChart'
+import RegressionChart from '@/components/btcprice/RegressionChart'
+import RainbowChart from '@/components/btcprice/RainbowChart'
+import DifferenceChart from '@/components/btcprice/DifferenceChart'
 
 import { CHART_COLORS } from '@/constants/colors'
 
@@ -54,7 +54,7 @@ export default function BtcPricePage() {
     <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12 space-y-8">
       <div>
         <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-          Bitcoin Quantitative & Price Analysis
+          Bitcoin Price Analysis
         </h1>
         <p className="text-gray-400 mt-2">
           Logarithmic regression, returns and volatility metrics

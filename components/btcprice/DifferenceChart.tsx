@@ -1,6 +1,8 @@
 // components/DifferenceChart.tsx
 'use client'
 import { CHART_COLORS } from '@/constants/colors'
+import { CHART_CONFIG } from '@/constants/charts'
+import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -21,11 +23,12 @@ interface DifferenceChartProps {
 }
 
 export default function DifferenceChart({
-  title = 'Price-regression Log Ratio',
+  title = 'Regression-Price Log Ratio',
   data,
   xAxisDataKey = 'date',
   priceDataKey = 'close',
-  diffDataKey = 'diff_pct' // Nome da coluna da diferença no seu banco
+  diffDataKey = 'diff_pct',
+  regDataKey = 'fair_value'
 }: DifferenceChartProps) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 w-full">
@@ -42,37 +45,27 @@ export default function DifferenceChart({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
+            <ComposedChart data={data} margin={CHART_CONFIG.defaultMargins}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
 
-              <XAxis
+              <DefaultXAxis
                 dataKey={xAxisDataKey}
-                stroke={CHART_COLORS.xaxis}
-                tick={{ fontSize: 12 }}
-                minTickGap={30}
               />
 
-              
+             
+              <DefaultYAxis
+                yAxisId="left"
+              />
+
               <YAxis
                 yAxisId="right"
                 stroke={CHART_COLORS.difference}
                 domain={['auto', 'auto']}
                 tick={{ fontSize: 12 }}
-                tickFormatter={(val) => `${Number(val).toFixed(2)}`}
+                tickFormatter={(val) => `${Number(val).toLocaleString('en-US', { notation: 'compact' })}`}
                 orientation="right"
                 scale="log"
-              />
-
-             
-              <YAxis
-                yAxisId="left"
-                stroke={CHART_COLORS.yaxis}
-                scale="log"
-                domain={['auto', 'auto']}
-                allowDataOverflow={true}
-                tick={{ fontSize: 12 }}
-                tickFormatter={(val) => `$${Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                orientation="left"
+                width = {40}
               />
 
               <Tooltip
@@ -95,7 +88,12 @@ export default function DifferenceChart({
               <Legend
                 verticalAlign="bottom"
                 align="center"
-                wrapperStyle={{ paddingTop: '16px', fontSize: '12px', color: '#9CA3AF' }}
+                iconSize={8}
+                wrapperStyle={{
+                  paddingTop: '15px',
+                  fontSize: '11px',
+                  color: '#9CA3AF'
+                }}
               />
 
               {/* Linha da Diferença (Vinculada ao Eixo Esquerdo) */}
@@ -107,6 +105,7 @@ export default function DifferenceChart({
                 stroke={CHART_COLORS.difference}
                 strokeWidth={2}
                 dot={false}
+                width = {20}
               />
 
               {/* Linha do Preço do Bitcoin (Vinculada ao Eixo Direito) */}
@@ -119,6 +118,17 @@ export default function DifferenceChart({
                 strokeWidth={1.5}
                 dot={false}
               />
+
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey={regDataKey}
+                name="Fair Value"
+                stroke={CHART_COLORS.fairValue}
+                strokeWidth={1.5}
+                dot={false}
+              />
+
             </ComposedChart>
           </ResponsiveContainer>
         )}

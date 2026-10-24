@@ -26,12 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-US">
-      <body className="bg-gray-950 text-white flex min-h-screen">
-        {/* Sidebar fixa na lateral esquerda */}
+      <body className="bg-gray-950 text-white flex flex-col md:flex-row min-h-screen">
         <Sidebar />
-
-        {/* Conteúdo principal da página atual preenchendo o resto da tela */}
-        <main className="flex-1 overflow-x-hidden">
+        <main className="flex-1 overflow-x-hidden p-4 md:p-6">
           {children}
         </main>
       </body>
