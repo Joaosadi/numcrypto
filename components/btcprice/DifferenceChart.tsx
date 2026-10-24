@@ -20,6 +20,7 @@ interface DifferenceChartProps {
   xAxisDataKey?: string
   priceDataKey?: string
   diffDataKey?: string
+  regDataKey?: string
 }
 
 export default function DifferenceChart({
