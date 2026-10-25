@@ -3,6 +3,8 @@
 import { CHART_COLORS } from '@/constants/colors'
 import { CHART_CONFIG } from '@/constants/charts'
 import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
+import { DefaultLegend } from '../Legend'
+import { useState, useMemo } from 'react'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -25,17 +27,56 @@ interface DifferenceChartProps {
 
 export default function DifferenceChart({
   title = 'Regression-Price Log Ratio',
-  data,
+  data: rawData,
   xAxisDataKey = 'date',
   priceDataKey = 'close',
   diffDataKey = 'diff_pct',
   regDataKey = 'fair_value'
 }: DifferenceChartProps) {
+
+  const [timeframe, setTimeframe] = useState<'1M' | '1Y' | 'ALL'>('ALL')
+
+  const data = useMemo(() => {
+    if (!rawData || !rawData.length) return []
+    if (timeframe === 'ALL') return rawData
+
+    // Tenta encontrar um campo de timestamp ou converte o xAxisDataKey se necessário
+    const lastItem = rawData[rawData.length - 1]
+    const now = lastItem.timestamp || new Date(lastItem[xAxisDataKey]).getTime()
+    
+    if (isNaN(now)) return rawData // Retorna tudo se não encontrar uma base numérica de tempo válida
+
+    const daysLimit = timeframe === '1M' ? 30 : 365
+    const limitTimestamp = now - daysLimit * 24 * 60 * 60 * 1000
+
+    return rawData.filter((item) => {
+      const itemTimestamp = item.timestamp || new Date(item[xAxisDataKey]).getTime()
+      return itemTimestamp >= limitTimestamp
+    })
+  }, [rawData, timeframe, xAxisDataKey])
+
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 w-full">
-      {/* Cabeçalho */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+      {/* Cabeçalho do Gráfico */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-gray-800 pb-4">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
+
+        {/* Seletor de Período (Timeframe) */}
+        <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
+          <div className="bg-gray-950 p-1 rounded-lg border border-gray-800 flex space-x-1">
+            {(['1M', '1Y', 'ALL'] as const).map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`px-3 py-1.5 rounded-md transition-all ${
+                  timeframe === tf ? 'bg-gray-800 text-emerald-400 font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tf === 'ALL' ? 'All' : tf}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Gráfico */}
@@ -86,15 +127,7 @@ export default function DifferenceChart({
                 ]}
               />
 
-              <Legend
-                verticalAlign="bottom"
-                align="center"
-                iconSize={8}
-                wrapperStyle={{
-                  paddingTop: '15px',
-                  fontSize: '11px',
-                  color: '#9CA3AF'
-                }}
+              <DefaultLegend
               />
 
               {/* Linha da Diferença (Vinculada ao Eixo Esquerdo) */}
