@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import pandas as pd
+import numpy as np
 
 # Carrega as variáveis do arquivo .env local do python
 load_dotenv()
@@ -150,7 +151,7 @@ def get_btc_returns(years: int = Query(default=4, ge=1, le=10)):
         shift_periods = int(years * 365)
 
         # Cálculo correto da porcentagem de retorno acumulado
-        df["returnPct"] = ((df["close"] / df["close"].shift(shift_periods)) - 1) * 100
+        df["returnPct"] = (df["close"] / df["close"].shift(shift_periods))
 
         # Remove as linhas iniciais onde o shift resulta em NaN (ex: primeiros anos sem histórico prévio)
         df = df.dropna(subset=["returnPct"])

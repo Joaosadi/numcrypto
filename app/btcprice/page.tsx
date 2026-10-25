@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import RegressionChart from '@/components/btcprice/RegressionChart'
 import RainbowChart from '@/components/btcprice/RainbowChart'
 import DifferenceChart from '@/components/btcprice/DifferenceChart'
+import NYearReturnChart from '@/components/btcprice/NYearReturnChart'
 
 import { CHART_COLORS } from '@/constants/colors'
 
@@ -81,6 +82,12 @@ export default function BtcPricePage() {
         {/* Gráfico 2: Diferença com Eixo Duplo */}
         <div className="w-full">
           <DifferenceChart data={data} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="w-full">
+          <NYearReturnChart/>
         </div>
       </div>
 

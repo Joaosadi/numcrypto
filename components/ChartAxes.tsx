@@ -5,6 +5,7 @@ import { CHART_COLORS } from '@/constants/colors' // Usando o seu dicionário de
 interface DefaultXAxisProps {
   dataKey?: string
   label?: string
+  formatter?: (val: number) => string
 }
 
 interface DefaultYAxisProps {
@@ -13,16 +14,26 @@ interface DefaultYAxisProps {
   label?: string
   formatter?: (val: number) => string
   scale?: 'auto' | 'log'
+  labelOffset?: number
+  stroke?: string
 }
 
 // 1. Eixo X Padrão (Sempre para Datas)
-export function DefaultXAxis({ dataKey = 'time_close', label = 'Date' }: DefaultXAxisProps) {
+export function DefaultXAxis({ dataKey = 'time_close', label = 'Date', formatter =  (val) => `$${Number(val).toLocaleString('en-US', { notation: 'compact' })}`}
+  : DefaultXAxisProps) {
   return (
     <XAxis
         dataKey={dataKey}
         stroke={CHART_COLORS.xaxis}
         tick={{ fontSize: 12 }}
         minTickGap={30}
+        tickFormatter={(val) => {
+            if (!val) return ''
+            return new Date(val).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: '2-digit'
+            })}}
         label={{
             value: label,
             angle: 0,
@@ -41,13 +52,15 @@ export function DefaultYAxis({
   orientation = 'left',
   label = 'Price',
   formatter = (val) => `$${Number(val).toLocaleString('en-US', { notation: 'compact' })}`,
-  scale = 'log'
+  scale = 'log',
+  labelOffset = 50,
+  stroke = CHART_COLORS.yaxis
 }: DefaultYAxisProps) {
   return (
     <YAxis
         yAxisId = {yAxisId} 
-        stroke={CHART_COLORS.yaxis}
-        scale="log"
+        stroke={stroke}
+        scale={scale}
         domain={['auto', 'auto']}
         allowDataOverflow={true}
         tick={{ fontSize: 12 }}
@@ -58,7 +71,7 @@ export function DefaultYAxis({
             value: label,
             angle: -90,
             position: 'insideRight',
-            offset: 50,
+            offset: labelOffset,
             fill: '#9CA3AF',
             fontSize: 10
         }}
