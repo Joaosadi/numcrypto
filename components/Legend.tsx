@@ -4,8 +4,8 @@ import {
 
 
 interface LegendProps {
-  verticalAlign?: string
-  align?: string
+  verticalAlign?: 'top' | 'middle' | 'bottom'
+  align?: 'left' | 'center' | 'right'
 }
 
 export function DefaultLegend({
