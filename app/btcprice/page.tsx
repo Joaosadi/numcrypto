@@ -7,6 +7,7 @@ import RegressionChart from '@/components/btcprice/RegressionChart'
 import RainbowChart from '@/components/btcprice/RainbowChart'
 import DifferenceChart from '@/components/btcprice/DifferenceChart'
 import NYearReturnChart from '@/components/btcprice/NYearReturnChart'
+import ReturnDistributionChart from '@/components/btcprice/ReturnDistributionChart'
 
 import { CHART_COLORS } from '@/constants/colors'
 
@@ -89,7 +90,13 @@ export default function BtcPricePage() {
         <div className="w-full">
           <NYearReturnChart/>
         </div>
+
+        <div className="w-full">
+          <ReturnDistributionChart/>
+        </div>
       </div>
+
+
 
     </main>
   )

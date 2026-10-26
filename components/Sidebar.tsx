@@ -12,7 +12,7 @@ export default function Sidebar() {
 
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Price & Regression', href: '/btcprice', icon: TrendingUp },
+    { name: 'BTC Price & Regression', href: '/btcprice', icon: TrendingUp },
   ]
 
   const closeSidebar = () => setIsOpen(false)
@@ -82,7 +82,7 @@ export default function Sidebar() {
         {/* Rodapé da Sidebar */}
         <div className="p-4 border-t border-gray-800 text-xs text-gray-500 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>FastAPI & Supabase Conectados</span>
+          <span></span>
         </div>
       </aside>
     </>

@@ -226,11 +226,19 @@ def update_btc_daily(df):
         response = supabase.table("btc_daily").upsert(batch, on_conflict="time_close").execute()
         print(f"Inseridos/Atualizados registros de {i} até {i + len(batch)}")
 
+def get_log_returns(df):
+    # 1. Calcula o log return
+    df["log_return"] = (df["close"] / df["close"].shift(1)-1).replace(np.nan, 0)
+
+    return df
+
 if __name__ == "__main__":
     update_missing_candles()
     btc_data = pd.DataFrame(get_btc_data())
     # print(btc_data)
     df = generate_log_regressions(btc_data)
-    print(df.columns)
+    df = get_log_returns(df)
+    df.to_html("df.html")
+    # print(df.columns)
     update_btc_daily(df)
-    # df.to_html("df.html")
+    df.to_html("df.html")

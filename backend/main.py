@@ -5,6 +5,7 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
+from scipy import stats
 
 # Carrega as variáveis do arquivo .env local do python
 load_dotenv()
@@ -169,3 +170,51 @@ def get_btc_returns(years: int = Query(default=4, ge=1, le=10)):
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+
+def process_return_distribution(returns_series, num_bins=50):
+    # Remove valores nulos do histórico
+    returns = returns_series.dropna().values
+
+    # 1. Frequência do Histograma (normalizado para densidade)
+    counts, bin_edges = np.histogram(returns, bins=num_bins, density=True)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+    # 2. Ajuste da distribuição t-Student (retorna: df=graus de liberdade, loc=média, scale=escala)
+    df_param, loc_param, scale_param = stats.t.fit(returns)
+
+    # 3. Pontos para plotar a curva suave da t-Student ajustada
+    x_pdf = np.linspace(returns.min(), returns.max(), 200)
+    y_pdf = stats.t.pdf(x_pdf, df=df_param, loc=loc_param, scale=scale_param)
+
+    # 4. Intervalo de Confiança de 95% da distribuição ajustada
+    ci_lower, ci_upper = stats.t.interval(0.95, df=df_param, loc=loc_param, scale=scale_param)
+
+    # Formatação do dicionário final para envio ao Front-end
+    return {
+        "histogram": [
+            {"bin": float(b), "density": float(c)} 
+            for b, c in zip(bin_centers, counts)
+        ],
+        "fitted_t_student": [
+            {"x": float(x), "pdf": float(y)} 
+            for x, y in zip(x_pdf, y_pdf)
+        ],
+        "metrics": {
+            "degrees_of_freedom": float(df_param),
+            "mean": float(loc_param),
+            "scale": float(scale_param),
+            "ci_95_lower": float(ci_lower),
+            "ci_95_upper": float(ci_upper)
+        }
+    }
+
+@app.get("/api/btc-return-distribution")
+def get_btc_return_distribution():
+    # Busca 'log_return' da tabela 'btc_daily' no Supabase
+    res = supabase.table("btc_daily").select("log_return").execute()
+    df_returns = pd.DataFrame(res.data)["log_return"]
+
+    payload = process_return_distribution(df_returns)
+    return {"success": True, "data": payload}
