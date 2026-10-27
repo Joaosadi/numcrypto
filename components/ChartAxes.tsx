@@ -5,7 +5,7 @@ import { CHART_COLORS } from '@/constants/colors' // Usando o seu dicionário de
 interface DefaultXAxisProps {
   dataKey?: string
   label?: string
-  hide?: bool
+  hide?: boolean
   formatter?: (val: number) => string
 }
 
