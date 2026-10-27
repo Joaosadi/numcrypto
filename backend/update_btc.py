@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import scipy
 import numpy as np
+from arch import arch_model
 
 # Carrega o .env local se estiver testando na sua máquina
 load_dotenv()
@@ -232,13 +233,54 @@ def get_log_returns(df):
 
     return df
 
+def calculate_volatility_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Recebe um DataFrame contendo as colunas 'high', 'low', 'close' ordenadas por data
+    e calcula a Volatilidade de Parkinson e o Relative Volatility Index (RVI).
+    """
+    # -------------------------------------------------------------
+    # 1. Volatilidade de Parkinson (14 dias)
+    # Utiliza High e Low para capturar o ruído intradiário (anualizada)
+    # -------------------------------------------------------------
+    hl_ratio = np.log(df["high"] / df["low"])
+    parkinson_daily = (1.0 / (4.0 * np.log(2.0))) * (hl_ratio ** 2)
+    
+    # A janela móvel aplica a média nos valores diários de Parkinson, depois tira a raiz e anualiza
+    rolling_parkinson_mean = parkinson_daily.rolling(window=14, min_periods=1).mean()
+    df["volatility_parkinson_14d"] = np.sqrt(rolling_parkinson_mean) * np.sqrt(365) * 100
+    
+    # Preenche eventuais valores nulos iniciais
+    df["volatility_parkinson_14d"] = df["volatility_parkinson_14d"].bfill().fillna(0)
+
+    return df
+
+def calculate_garch_volatility(df):
+    """
+    Calcula a volatilidade condicional usando GARCH(1,1) com base nos retornos logarítmicos.
+    """
+
+    # 2. Configura o modelo GARCH(1,1)
+    # Assumimos uma distribuição t de Student (sd) para capturar melhor as "caudas pesadas" das criptos
+    model = arch_model(df["log_return"]*100, vol="Garch", p=1, q=1, dist="t")
+    
+    # 3. Ajusta o modelo aos dados históricos
+    results = model.fit(disp="off")
+
+    # 4. Extrai a volatilidade condicional anualizada do modelo (%)
+    # O GARCH retorna a volatilidade diária, multiplicamos por sqrt(365) para anualizar em cripto
+    df["garch_volatility_30d"] = results.conditional_volatility * np.sqrt(365)
+
+    return df
+
 if __name__ == "__main__":
     update_missing_candles()
     btc_data = pd.DataFrame(get_btc_data())
     # print(btc_data)
     df = generate_log_regressions(btc_data)
     df = get_log_returns(df)
-    df.to_html("df.html")
+    df = calculate_volatility_metrics(df)
+    df = calculate_garch_volatility(df)
+    # df.to_html("df.html")
     # print(df.columns)
     update_btc_daily(df)
-    df.to_html("df.html")
+    # df.to_html("df.html")
