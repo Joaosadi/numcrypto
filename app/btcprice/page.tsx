@@ -8,6 +8,7 @@ import RainbowChart from '@/components/btcprice/RainbowChart'
 import DifferenceChart from '@/components/btcprice/DifferenceChart'
 import NYearReturnChart from '@/components/btcprice/NYearReturnChart'
 import ReturnDistributionChart from '@/components/btcprice/ReturnDistributionChart'
+import VolatilityChart from '@/components/btcprice/VolatilityChart'
 
 import { CHART_COLORS } from '@/constants/colors'
 
@@ -96,6 +97,9 @@ export default function BtcPricePage() {
         </div>
       </div>
 
+        <div className="w-full">
+          <VolatilityChart data={data} />
+        </div>
 
 
     </main>
