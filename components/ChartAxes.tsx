@@ -5,6 +5,7 @@ import { CHART_COLORS } from '@/constants/colors' // Usando o seu dicionário de
 interface DefaultXAxisProps {
   dataKey?: string
   label?: string
+  hide?: bool
   formatter?: (val: number) => string
 }
 
@@ -19,13 +20,17 @@ interface DefaultYAxisProps {
 }
 
 // 1. Eixo X Padrão (Sempre para Datas)
-export function DefaultXAxis({ dataKey = 'time_close', label = 'Date', formatter =  (val) => `$${Number(val).toLocaleString('en-US', { notation: 'compact' })}`}
+export function DefaultXAxis({ 
+  dataKey = 'time_close', label = 'Date', 
+  formatter =  (val) => `$${Number(val).toLocaleString('en-US', { notation: 'compact' })}`,
+  hide = false}
   : DefaultXAxisProps) {
   return (
     <XAxis
         dataKey={dataKey}
         stroke={CHART_COLORS.xaxis}
         tick={{ fontSize: 12 }}
+        hide = {hide}
         minTickGap={30}
         tickFormatter={(val) => {
             if (!val) return ''

@@ -90,7 +90,7 @@ export default function VolatilityChart({ data }: Props) {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={filteredData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-                  <DefaultXAxis dataKey="date" hide />
+                  <DefaultXAxis dataKey="date" hide={true}/>
                   <DefaultYAxis/>
                   <Tooltip
                     contentStyle={{
@@ -128,14 +128,8 @@ export default function VolatilityChart({ data }: Props) {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
                   <DefaultXAxis
                     dataKey="date"
-                    stroke="#9CA3AF"
-                    tick={{ fontSize: 11 }}
-                    minTickGap={40}
                   />
                   <DefaultYAxis
-                    stroke="#9CA3AF"
-                    domain={['auto', 'auto']}
-                    tick={{ fontSize: 11 }}
                     formatter = {(val) => `${Number(val).toFixed(0)}%`}
                   />
                   <Tooltip
