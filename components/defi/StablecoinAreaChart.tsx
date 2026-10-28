@@ -111,7 +111,7 @@ export default function StablecoinAreaChart() {
     return filteredData.map((row) => {
       let total = 0
       symbols.forEach((sym) => {
-        total += Number(row[sym] || 0)
+        total += Number(row[sym as keyof typeof row] || 0)
       })
 
       const normalizedRow: Record<string, any> = {
@@ -120,7 +120,7 @@ export default function StablecoinAreaChart() {
       }
 
       symbols.forEach((sym) => {
-        const val = Number(row[sym] || 0)
+        const val = Number(row[sym as keyof typeof row] || 0)
         normalizedRow[sym] = total > 0 ? (val / total) * 100 : 0
       })
 
