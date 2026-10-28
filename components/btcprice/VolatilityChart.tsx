@@ -131,6 +131,7 @@ export default function VolatilityChart({ data }: Props) {
                   />
                   <DefaultYAxis
                     formatter = {(val) => `${Number(val).toFixed(0)}%`}
+                    label = "Volatility"
                   />
                   <Tooltip
                     contentStyle={{

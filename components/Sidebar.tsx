@@ -13,6 +13,7 @@ export default function Sidebar() {
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'BTC Price & Regression', href: '/btcprice', icon: TrendingUp },
+    { name: 'Defi', href: '/defi', icon: Home },
   ]
 
   const closeSidebar = () => setIsOpen(false)
