@@ -22,8 +22,6 @@ interface StablecoinRow {
   circulating_b: number
 }
 
-// Mapeamento de cores padronizado
-
 export default function StablecoinAreaChart() {
   const [rawData, setRawData] = useState<StablecoinRow[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -108,10 +106,11 @@ export default function StablecoinAreaChart() {
   const finalChartData = useMemo(() => {
     if (viewMode === 'nominal') return filteredData
 
-    return filteredData.map((row) => {
+    // Tipando explicitamente o row como Record<string, any> para evitar TS7053
+    return filteredData.map((row: Record<string, any>) => {
       let total = 0
       symbols.forEach((sym) => {
-        total += Number(row[sym as keyof typeof row] || 0)
+        total += Number(row[sym] || 0)
       })
 
       const normalizedRow: Record<string, any> = {
@@ -120,7 +119,7 @@ export default function StablecoinAreaChart() {
       }
 
       symbols.forEach((sym) => {
-        const val = Number(row[sym as keyof typeof row] || 0)
+        const val = Number(row[sym] || 0)
         normalizedRow[sym] = total > 0 ? (val / total) * 100 : 0
       })
 
@@ -198,9 +197,8 @@ export default function StablecoinAreaChart() {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
             <defs>
-              {symbols.map((symbol, idx) => {
-                const color =
-                  DEFI_COLORS[symbol]
+              {symbols.map((symbol) => {
+                const color = DEFI_COLORS[symbol as keyof typeof DEFI_COLORS] || '#10B981'
                 return (
                   <linearGradient key={symbol} id={`color-${symbol}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={color} stopOpacity={0.8} />
@@ -235,9 +233,8 @@ export default function StablecoinAreaChart() {
             />
             <DefaultLegend/>
 
-            {symbols.map((symbol, idx) => {
-              const color =
-                DEFI_COLORS[symbol]
+            {symbols.map((symbol) => {
+              const color = DEFI_COLORS[symbol as keyof typeof DEFI_COLORS] || '#10B981'
               return (
                 <Area
                   key={symbol}
