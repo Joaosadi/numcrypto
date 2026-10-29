@@ -271,4 +271,4 @@ def get_defi_stablecoin_data():
 
     except Exception as e:
         return {"success": False, "error": str(e)}
-        r
+        

@@ -13,12 +13,14 @@ export const CHART_COLORS = {
 }
 
 export const DEFI_COLORS = {
-  USDT: '#00ffb3',
-  USDC: '#00AAFF',
-  DAI: '#ffae00',
-  USDS: '#00ff00',
-  USD1: '#AA00FF',
-  USDe: '#E1A0FF',
-  PYUSD: '#0fd3e9',
-  Others: '#6E7681'
+  STABLECOINS:{
+    USDT: '#00ffb3',
+    USDC: '#00AAFF',
+    DAI: '#ffae00',
+    USDS: '#00ff00',
+    USD1: '#AA00FF',
+    USDe: '#E1A0FF',
+    PYUSD: '#0fd3e9',
+    Others: '#6E7681'
+  }
 }

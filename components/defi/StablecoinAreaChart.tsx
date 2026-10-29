@@ -2,9 +2,6 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
-import { DefaultLegend } from '../Legend'
-import { DEFI_COLORS } from '@/constants/colors'
 import {
   AreaChart,
   Area,
@@ -15,6 +12,10 @@ import {
   Legend
 } from 'recharts'
 
+import { DEFI_COLORS } from '@/constants/colors'
+import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
+import { DefaultLegend } from '../Legend'
+
 interface StablecoinRow {
   date: string
   symbol: string
@@ -22,39 +23,24 @@ interface StablecoinRow {
   circulating_b: number
 }
 
-export default function StablecoinAreaChart() {
-  const [rawData, setRawData] = useState<StablecoinRow[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
+interface StablecoinAreaChartProps {
+  data: StablecoinRow[]
+}
+// Mapeamento de cores padronizado
+
+export default function StablecoinAreaChart({ data = [] }: StablecoinAreaChartProps) {
+  const [rawData, setRawData] = useState<StablecoinRow[]>(data)
+
+  useEffect(() => {
+    setRawData(data)
+  }, [data])
 
   // Estados para os seletores
   const [timeframe, setTimeframe] = useState<'1M' | '1Y' | 'ALL'>('ALL')
   const [viewMode, setViewMode] = useState<'nominal' | 'percent'>('nominal')
 
-  useEffect(() => {
-    async function fetchStablecoinData() {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        const response = await fetch(`${apiUrl}/api/defi-stablecoin-data`)
-        const result = await response.json()
 
-        if (result.success && result.data) {
-          setRawData(result.data)
-        } else {
-          setError('Erro ao carregar dados das stablecoins')
-        }
-      } catch (err) {
-        console.error('Falha na requisição:', err)
-        setError('Não foi possível conectar ao backend.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStablecoinData()
-  }, [])
-
-  // 1. Processamento e Pivot dos Dados (Wide Format)
+  // 1. Processamento e Pivot dos Dados (Wide Format) com ordenação correta por timestamp
   const { fullChartData, symbols } = useMemo(() => {
     if (!rawData.length) return { fullChartData: [], symbols: [] }
 
@@ -63,18 +49,26 @@ export default function StablecoinAreaChart() {
 
     rawData.forEach((item) => {
       symbolSet.add(item.symbol)
+      
       const dateObj = new Date(item.date)
+      if (isNaN(dateObj.getTime())) return // Ignora datas inválidas
+
       const timestamp = dateObj.getTime()
-      const dateStr = dateObj.toLocaleDateString('en-US', {
+      // Usamos uma chave padronizada baseada em ISO/Timestamp para evitar conflitos de string
+      const dateKey = dateObj.toISOString().split('T')[0] // Formato YYYY-MM-DD
+      const displayDate = dateObj.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: '2-digit'
       })
 
-      if (!dateMap[dateStr]) {
-        dateMap[dateStr] = { date: dateStr, timestamp, rawDate: item.date }
+      if (!dateMap[dateKey]) {
+        dateMap[dateKey] = {
+          date: displayDate,
+          timestamp,
+        }
       }
-      dateMap[dateStr][item.symbol] = Number(item.circulating_b)
+      dateMap[dateKey][item.symbol] = Number(item.circulating_b || 0)
     })
 
     const symbolsArray = Array.from(symbolSet)
@@ -83,6 +77,7 @@ export default function StablecoinAreaChart() {
       symbolsArray.splice(0, symbolsArray.length, ...filtered, 'Others')
     }
 
+    // Ordena os registros cronologicamente pelo timestamp
     const sortedData = Object.values(dateMap).sort(
       (a, b) => a.timestamp - b.timestamp
     )
@@ -106,8 +101,7 @@ export default function StablecoinAreaChart() {
   const finalChartData = useMemo(() => {
     if (viewMode === 'nominal') return filteredData
 
-    // Tipando explicitamente o row como Record<string, any> para evitar TS7053
-    return filteredData.map((row: Record<string, any>) => {
+    return filteredData.map((row) => {
       let total = 0
       symbols.forEach((sym) => {
         total += Number(row[sym] || 0)
@@ -127,23 +121,15 @@ export default function StablecoinAreaChart() {
     })
   }, [filteredData, viewMode, symbols])
 
-  if (loading) {
-    return <div className="text-center text-gray-400 py-12">Loading data...</div>
-  }
-
-  if (error) {
-    return <div className="text-center text-red-400 py-12">{error}</div>
-  }
-
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 w-full">
       {/* Cabeçalho e Controles */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-gray-800 pb-4">
         <div>
           <h3 className="text-lg font-semibold text-white">Stablecoins Supply Overview</h3>
           <p className="text-xs text-gray-400">
             {viewMode === 'nominal'
-              ? 'Absolute Value ($B)'
+              ? 'Absolute Value USD ($B)'
               : 'Market Share (%)'}
           </p>
         </div>
@@ -194,61 +180,68 @@ export default function StablecoinAreaChart() {
 
       {/* Renderização do Gráfico */}
       <div className="w-full h-[450px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-            <defs>
-              {symbols.map((symbol) => {
-                const color = DEFI_COLORS[symbol as keyof typeof DEFI_COLORS] || '#10B981'
+        {finalChartData.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+            No data available.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
+              <defs>
+                {symbols.map((symbol, idx) => {
+                  const color = DEFI_COLORS.STABLECOINS[symbol]
+                  
+                  return (
+                    <linearGradient key={symbol} id={`color-${symbol}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={color} stopOpacity={0.1} />
+                    </linearGradient>
+                  )
+                })}
+              </defs>
+
+              <DefaultXAxis dataKey="date"/>
+              <YAxis
+                stroke="#9CA3AF"
+                tick={{ fontSize: 11 }}
+                domain={viewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
+                tickFormatter={(val: number) =>
+                  viewMode === 'percent' ? `${val.toFixed(0)}%` : `$${val.toFixed(0)}B`
+                }
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1F2937',
+                  borderColor: '#374151',
+                  borderRadius: '8px',
+                  color: '#FFF'
+                }}
+                formatter={(val: any, name: any) => [
+                  viewMode === 'percent'
+                    ? `${Number(val).toFixed(2)}%`
+                    : `$${Number(val).toFixed(2)}B`,
+                  name
+                ]}
+              />
+              <DefaultLegend/>
+
+              {symbols.map((symbol, idx) => {
+                const color = DEFI_COLORS.STABLECOINS[symbol]
                 return (
-                  <linearGradient key={symbol} id={`color-${symbol}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0.1} />
-                  </linearGradient>
+                  <Area
+                    key={symbol}
+                    type="monotone"
+                    dataKey={symbol}
+                    stackId="1"
+                    stroke={color}
+                    strokeWidth={2}
+                    fill={`url(#color-${symbol})`}
+                  />
                 )
               })}
-            </defs>
-
-            <DefaultXAxis dataKey="date"/>
-            <YAxis
-              stroke="#9CA3AF"
-              tick={{ fontSize: 11 }}
-              domain={viewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
-              tickFormatter={(val: number) =>
-                viewMode === 'percent' ? `${val.toFixed(0)}%` : `$${val.toFixed(0)}B`
-              }
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#1F2937',
-                borderColor: '#374151',
-                borderRadius: '8px',
-                color: '#FFF'
-              }}
-              formatter={(val: any, name: any) => [
-                viewMode === 'percent'
-                  ? `${Number(val).toFixed(2)}%`
-                  : `$${Number(val).toFixed(2)}B`,
-                name
-              ]}
-            />
-            <DefaultLegend/>
-
-            {symbols.map((symbol) => {
-              const color = DEFI_COLORS[symbol as keyof typeof DEFI_COLORS] || '#10B981'
-              return (
-                <Area
-                  key={symbol}
-                  type="monotone"
-                  dataKey={symbol}
-                  stackId="1"
-                  stroke={color}
-                  strokeWidth={2}
-                  fill={`url(#color-${symbol})`}
-                />
-              )
-            })}
-          </AreaChart>
-        </ResponsiveContainer>
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   )
