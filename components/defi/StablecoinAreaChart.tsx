@@ -189,7 +189,7 @@ export default function StablecoinAreaChart({ data = [] }: StablecoinAreaChartPr
             <AreaChart data={finalChartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
               <defs>
                 {symbols.map((symbol, idx) => {
-                  const color = DEFI_COLORS.STABLECOINS[symbol]
+                  const color = DEFI_COLORS.STABLECOINS[symbol as keyof typeof DEFI_COLORS]
                   
                   return (
                     <linearGradient key={symbol} id={`color-${symbol}`} x1="0" y1="0" x2="0" y2="1">
@@ -226,7 +226,7 @@ export default function StablecoinAreaChart({ data = [] }: StablecoinAreaChartPr
               <DefaultLegend/>
 
               {symbols.map((symbol, idx) => {
-                const color = DEFI_COLORS.STABLECOINS[symbol]
+                const color = DEFI_COLORS.STABLECOINS[symbol as keyof typeof DEFI_COLORS]
                 return (
                   <Area
                     key={symbol}
