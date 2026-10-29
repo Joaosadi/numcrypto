@@ -272,15 +272,82 @@ def calculate_garch_volatility(df):
 
     return df
 
+def get_stablecoin_historical_data(id="1"):
+        # Lightweight per-day total across all chains (~0.5 MB) instead of the
+        # ~20 MB chainBalances payload from /stablecoin/{id}.
+        url = f"https://stablecoins.llama.fi/stablecoincharts/all?stablecoin={id}"
+        r = requests.get(url, timeout=60).json()
+
+        dictlist = []
+        for d in r:
+            circ = d["totalCirculating"].get("peggedUSD")
+            if circ is None:
+                continue
+            dictlist.append({"date": pd.to_datetime(int(d["date"]), unit="s"), "circulating": circ})
+        return pd.DataFrame(dictlist)
+
+def prepare_top_stablecoin_data(df, nstables = 6):
+    df_sorted = df.sort_values("circulating", ascending = False).head(nstables)
+    series_dict = dict()
+    for id, symbol in zip(df_sorted["id"], df_sorted["symbol"]):
+        coindata = get_stablecoin_historical_data(id=id)
+        coindata = coindata.groupby("date")["circulating"].sum()
+        series_dict[symbol] = coindata
+
+    result = pd.concat(series_dict, axis = 1).fillna(0)
+    result = result.sort_index().reset_index()
+    df_long = result.melt(id_vars=["date"], var_name="symbol", value_name="circulating")
+    df_long["circulating_b"] = df_long["circulating"].astype(float) / 1e9
+    if 'time_close' in df_long.columns:
+        df_long = df_long.drop("time_close")
+    return df_long
+
+def get_stablecoin_circulating_data():
+    url = "https://stablecoins.llama.fi/stablecoins"
+    response = requests.get(url)
+    data = response.json()["peggedAssets"]
+    dict_list = []
+    for coin in data:
+        # for some reason this is very confusing to work
+        circ = list(coin["circulating"].values())[0]
+        d = {"id": coin["id"], "name": coin["name"], "symbol": coin["symbol"], "circulating": circ}
+        dict_list.append(d)
+    df = pd.DataFrame(dict_list)
+    return df
+
+def update_table(df, table):
+    # 1. Substitui NaN/NaT por None de forma segura
+    df = df.where(pd.notnull(df), None)
+
+    # 2. Converte qualquer coluna que seja do tipo datetime ou Timestamp diretamente para string ISO
+    for col in df.columns:
+        # Se a coluna for do tipo datetime do pandas ou objeto datetime
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            # Converte valores válidos para string e mantém None onde era nulo
+            df[col] = df[col].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%SZ') if x is not None else None)
+
+    # 3. Insere em lotes (batches de 500) para respeitar limites da API
+    batch_size = 500
+    for i in range(0, len(df), batch_size):
+        batch_df = df.iloc[i:i + batch_size]
+        
+        # Converte o pedaço do DataFrame para uma lista de dicionários serializáveis
+        batch = batch_df.to_dict(orient="records")
+        
+        response = supabase.table(table).upsert(batch, on_conflict="date, symbol").execute()
+        print(f"Inseridos/Atualizados registros de {i} até {i + len(batch)} na tabela {table}")
+
+        
+
 if __name__ == "__main__":
     update_missing_candles()
     btc_data = pd.DataFrame(get_btc_data())
-    # print(btc_data)
     df = generate_log_regressions(btc_data)
     df = get_log_returns(df)
     df = calculate_volatility_metrics(df)
     df = calculate_garch_volatility(df)
     # df.to_html("df.html")
-    # print(df.columns)
     update_btc_daily(df)
-    # df.to_html("df.html")
+    df_stables = get_stablecoin_circulating_data()
+    prepared_data = prepare_top_stablecoin_data(df_stables)
+    update_table(prepared_data, "prepared_stablecoin_data")

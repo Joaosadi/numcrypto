@@ -20,7 +20,7 @@ export default function DefiPage() {
     async function fetchStablecoinData() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        const response = await fetch(`${apiUrl}/api/defi-stablecoin-data`)
+        const response = await fetch(`${apiUrl}/api/defi-prepared-stablecoin-data`)
         const result = await response.json()
 
         if (result.success && result.data) {

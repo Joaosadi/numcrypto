@@ -220,55 +220,45 @@ def get_btc_return_distribution():
     payload = process_return_distribution(df_returns)
     return {"success": True, "data": payload}
 
-@app.get("/api/defi-stablecoin-data")
-def get_defi_stablecoin_data():
-    def get_stablecoin_historical_data(id="1"):
-        # Lightweight per-day total across all chains (~0.5 MB) instead of the
-        # ~20 MB chainBalances payload from /stablecoin/{id}.
-        url = f"https://stablecoins.llama.fi/stablecoincharts/all?stablecoin={id}"
-        r = requests.get(url, timeout=60).json()
-
-        dictlist = []
-        for d in r:
-            circ = d["totalCirculating"].get("peggedUSD")
-            if circ is None:
-                continue
-            dictlist.append({"date": pd.to_datetime(int(d["date"]), unit="s"), "circulating": circ})
-        return pd.DataFrame(dictlist)
-
-    def get_stablecoin_circulating_data():
-        url = "https://stablecoins.llama.fi/stablecoins"
-        response = requests.get(url)
-        data = response.json()["peggedAssets"]
-        dict_list = []
-        for coin in data:
-            # for some reason this is very confusing to work
-            circ = list(coin["circulating"].values())[0]
-            d = {"id": coin["id"], "name": coin["name"], "symbol": coin["symbol"], "circulating": circ}
-            dict_list.append(d)
-        df = pd.DataFrame(dict_list)
-        return df
-
-    def prepare_top_stablecoin_data(df, nstables = 6):
-        df_sorted = df.sort_values("circulating", ascending = False).head(nstables)
-        series_dict = dict()
-        for id, symbol in zip(df_sorted["id"], df_sorted["symbol"]):
-            coindata = get_stablecoin_historical_data(id=id)
-            coindata = coindata.groupby("date")["circulating"].sum()
-            series_dict[symbol] = coindata
-
-        result = pd.concat(series_dict, axis = 1).fillna(0)
-        result = result.sort_index().reset_index()
-        df_long = result.melt(id_vars=["date"], var_name="symbol", value_name="circulating")
-        df_long["circulating_b"] = df_long["circulating"].astype(float) / 1e9
-        return df_long
-    
+@app.get("/api/defi-prepared-stablecoin-data")
+def get_prepared_stablecoin_data():
     try:
-        df_stables = get_stablecoin_circulating_data()
-        prepared_data = prepare_top_stablecoin_data(df_stables)
-        payload = prepared_data.to_dict(orient="records")
-        return {"success": True, "data": payload}
+        all_data = []
+        batch_size = 1000
+        start = 0
+        
+        while True:
+            response = supabase.table("prepared_stablecoin_data") \
+                .select("*") \
+                .order("date", desc=False) \
+                .range(start, start + batch_size - 1) \
+                .execute()
+            
+            chunk = response.data
+            if not chunk:
+                break
+                
+            all_data.extend(chunk)
+            
+            if len(chunk) < batch_size:
+                break
+                
+            start += batch_size
 
+        df = pd.DataFrame(all_data)
+        latest_date = df['date'].max()
+        df_latest = df[df['date'] == latest_date]
+
+        # 3. Ordena as stablecoins pelo circulating na última data (ex: decrescente: do maior para o menor)
+        sorted_symbols = df_latest.sort_values(by='circulating', ascending=False)['symbol'].tolist()
+
+        # 4. Mapeia a coluna symbol como uma categoria ordenada no pandas
+        df['symbol'] = pd.Categorical(df['symbol'], categories=sorted_symbols, ordered=True)
+
+        # 5. Ordena o DataFrame principal primeiro pela data e depois pela ordem customizada das stablecoins
+        df = df.sort_values(by=['date', 'symbol'])
+        result_data = df.to_dict(orient="records")
+
+        return {"success": True, "data": result_data}
     except Exception as e:
         return {"success": False, "error": str(e)}
-        
