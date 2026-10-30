@@ -40,7 +40,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] 
 
 interface StablecoinDominanceProps {
   data?: Array<{
-    id?: string;
+    id: number;
     name: string;
     symbol: string;
     circulating: number;
