@@ -50,7 +50,7 @@ export default function RainbowChart({
   }, [rawData, timeframe, xAxisDataKey])
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 h-[550px]">
       {/* Cabeçalho do Gráfico */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-gray-800 pb-4">
         <h3 className="text-lg font-semibold text-white">{title}</h3>

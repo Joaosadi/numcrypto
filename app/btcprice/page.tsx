@@ -55,6 +55,7 @@ export default function BtcPricePage() {
 
   return (
     <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12">
+      <div className="flex flex-col space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
           Bitcoin Price Analysis
@@ -100,7 +101,7 @@ export default function BtcPricePage() {
         <div className="w-full">
           <VolatilityChart data={data} />
         </div>
-
+        </div>
 
     </main>
   )

@@ -67,7 +67,7 @@ export default function NYearReturnChart() {
   }, [rawData, timeframe])
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 w-full">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl w-full max-w-full overflow-hidden flex flex-col space-y-4 h-[550px]">
       {/* Cabeçalho e Seletor de Anos (1 a 10) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
         <div>
