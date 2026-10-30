@@ -3,10 +3,10 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { useEffect, useState, useMemo } from 'react'
 // Dados de exemplo baseados na sua estrutura
 const sampleData = [
-  { id: "1", name: "Tether", symbol: "USDT", circulating: 120450000000 },
-  { id: "2", name: "USD Coin", symbol: "USDC", circulating: 71313580094.0019 },
-  { id: "3", name: "Dai", symbol: "DAI", circulating: 5340000000 },
-  { id: "4", name: "Ethena USDe", symbol: "USDe", circulating: 3100000000 },
+  { id: 1, name: "Tether", symbol: "USDT", circulating: 120450000000 },
+  { id: 2, name: "USD Coin", symbol: "USDC", circulating: 71313580094.0019 },
+  { id: 3, name: "Dai", symbol: "DAI", circulating: 5340000000 },
+  { id: 4, name: "Ethena USDe", symbol: "USDe", circulating: 3100000000 },
 ];
 
 import { DEFI_COLORS } from '@/constants/colors'
