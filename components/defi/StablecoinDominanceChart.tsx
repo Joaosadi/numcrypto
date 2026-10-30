@@ -14,7 +14,7 @@ import { DefaultXAxis, DefaultYAxis } from '../ChartAxes'
 import { DefaultLegend } from '../Legend'
 
 // Formatador de moeda (USD)
-const formatCurrency = (value) => {
+const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -23,7 +23,7 @@ const formatCurrency = (value) => {
 };
 
 // Tooltip customizado ao passar o mouse sobre a fatia
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
@@ -38,7 +38,16 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function StablecoinDominanceChart({ data = sampleData }) {
+interface StablecoinDominanceProps {
+  data?: Array<{
+    id?: string;
+    name: string;
+    symbol: string;
+    circulating: number;
+  }>;
+}
+
+export default function StablecoinDominanceChart({ data = sampleData }: StablecoinDominanceProps) {
 
   const totalCirculating = useMemo(() => {
     if (!data || data.length === 0) return 0
@@ -85,7 +94,7 @@ export default function StablecoinDominanceChart({ data = sampleData }) {
               strokeWidth={2}
               labelLine={true}
               label={({ name, percent, x, y, cx }) => {
-                if (percent < 0.01) return null;
+                if (percent === undefined || percent < 0.01) return null;
                 
                 return (
                   <text
