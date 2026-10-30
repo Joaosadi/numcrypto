@@ -26,12 +26,12 @@ export const DEFI_COLORS = {
     OTHERS: '#6E7681'
   },
   CHAINS:{
-    "Ethereum": "#815ffc",
-    "Tron": "#FF0013",
-    "Solana": "#5900fd",
+    "ETHEREUM": "#815ffc",
+    "TRON": "#FF0013",
+    "SOLANA": "#5900fd",
     "BSC": "#F3BA2F",
-    "Hyperliquid L1": "#00FFCC",
-    "Base": "#0052FF",
-    "Others": "#64748B",
+    "HYPERLIQUID L1": "#00FFCC",
+    "BASE": "#0052FF",
+    "OTHERS": "#64748B",
   }
 }

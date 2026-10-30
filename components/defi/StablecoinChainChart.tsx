@@ -113,7 +113,7 @@ export default function StablecoinChainChart({ data = sampleData }: ChainDominan
               }}
             >
               {data.map((entry, index) => {
-                const chainKey = entry.chain || "";
+                const chainKey = (entry.chain || "").toUpperCase();;
                 const cellColor = DEFI_COLORS.CHAINS[chainKey as keyof typeof DEFI_COLORS.CHAINS] || "#64748B";
 
                 return (
