@@ -302,19 +302,6 @@ def prepare_top_stablecoin_data(df, nstables = 6):
         df_long = df_long.drop("time_close")
     return df_long
 
-def get_stablecoin_circulating_data():
-    url = "https://stablecoins.llama.fi/stablecoins"
-    response = requests.get(url)
-    data = response.json()["peggedAssets"]
-    dict_list = []
-    for coin in data:
-        # for some reason this is very confusing to work
-        circ = list(coin["circulating"].values())[0]
-        d = {"id": coin["id"], "name": coin["name"], "symbol": coin["symbol"], "circulating": circ}
-        dict_list.append(d)
-    df = pd.DataFrame(dict_list)
-    return df
-
 def update_table(df, table):
     # 1. Substitui NaN/NaT por None de forma segura
     df = df.where(pd.notnull(df), None)

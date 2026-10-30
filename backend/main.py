@@ -262,3 +262,93 @@ def get_prepared_stablecoin_data():
         return {"success": True, "data": result_data}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@app.get("/api/defi-stablecoin-circulating")
+def get_stablecoin_circulating():
+    url = "https://stablecoins.llama.fi/stablecoins"
+    response = requests.get(url)
+    data = response.json()["peggedAssets"]
+    
+    dict_list = []
+    for coin in data:
+        # Pega de forma segura o valor de circulação atual
+        circ_dict = coin.get("circulating", {})
+        circ = list(circ_dict.values())[0] if circ_dict else 0
+        
+        d = {
+            "id": coin.get("id"), 
+            "name": coin.get("name"), 
+            "symbol": coin.get("symbol"), 
+            "circulating": float(circ) if circ else 0.0
+        }
+        dict_list.append(d)
+        
+    # Converte para DataFrame do Pandas para facilitar a ordenação e o agrupamento
+    df = pd.DataFrame(dict_list)
+    
+    # Ordena da maior para a menor circulação
+    df = df.sort_values(by="circulating", ascending=False).reset_index(drop=True)
+    
+    # Separa as 7 maiores e o restante
+    top_6 = df.head(6).copy()
+    others = df.iloc[6:]
+    
+    # Se houver registros restantes, cria a linha agregada "Others"
+    if not others.empty:
+        others_sum = others["circulating"].sum()
+        row_others = pd.DataFrame([{
+            "id": "others",
+            "name": "Others",
+            "symbol": "OTHERS",
+            "circulating": others_sum
+        }])
+        final_df = pd.concat([top_6, row_others], ignore_index=True)
+    else:
+        final_df = top_6
+
+    return {"success": "true", "data": final_df.to_dict(orient="records")}
+
+@app.get("/api/defi-stablecoin-chains")
+def get_stablecoin_chains():
+    url = "https://stablecoins.llama.fi/stablecoins"
+    response = requests.get(url)
+    data = response.json()["peggedAssets"]
+    
+    dict_list = []
+    for coin in data:
+        # Pega de forma segura o valor de circulação atual
+        circ_dict = coin.get("circulating", {})
+        circ = list(circ_dict.values())[0] if circ_dict else 0
+        
+        d = {
+            "id": coin.get("id"), 
+            "name": coin.get("name"), 
+            "symbol": coin.get("symbol"), 
+            "circulating": float(circ) if circ else 0.0
+        }
+        dict_list.append(d)
+        
+    # Converte para DataFrame do Pandas para facilitar a ordenação e o agrupamento
+    df = pd.DataFrame(dict_list)
+    
+    # Ordena da maior para a menor circulação
+    df = df.sort_values(by="circulating", ascending=False).reset_index(drop=True)
+    
+    # Separa as 7 maiores e o restante
+    top_7 = df.head(7).copy()
+    others = df.iloc[7:]
+    
+    # Se houver registros restantes, cria a linha agregada "Others"
+    if not others.empty:
+        others_sum = others["circulating"].sum()
+        row_others = pd.DataFrame([{
+            "id": "others",
+            "name": "Others",
+            "symbol": "OTHERS",
+            "circulating": others_sum
+        }])
+        final_df = pd.concat([top_7, row_others], ignore_index=True)
+    else:
+        final_df = top_7
+
+    return {"success": "true", "data": final_df.to_dict(orient="records")}

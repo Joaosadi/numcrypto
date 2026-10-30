@@ -20,7 +20,9 @@ export const DEFI_COLORS = {
     USDS: '#00ff00',
     USD1: '#AA00FF',
     USDe: '#E1A0FF',
+    USDE: '#E1A0FF',
     PYUSD: '#0fd3e9',
-    Others: '#6E7681'
+    Others: '#6E7681',
+    OTHERS: '#6E7681'
   }
 }

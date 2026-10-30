@@ -54,7 +54,7 @@ export default function BtcPricePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12 space-y-8">
+    <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12">
       <div>
         <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
           Bitcoin Price Analysis

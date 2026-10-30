@@ -122,7 +122,7 @@ export default function StablecoinAreaChart({ data = [] }: StablecoinAreaChartPr
   }, [filteredData, viewMode, symbols])
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4 w-full">
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl space-y-4">
       {/* Cabeçalho e Controles */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-gray-800 pb-4">
         <div>
