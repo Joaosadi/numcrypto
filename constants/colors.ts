@@ -24,5 +24,14 @@ export const DEFI_COLORS = {
     PYUSD: '#0fd3e9',
     Others: '#6E7681',
     OTHERS: '#6E7681'
+  },
+  CHAINS:{
+    "Ethereum": "#815ffc",
+    "Tron": "#FF0013",
+    "Solana": "#5900fd",
+    "BSC": "#F3BA2F",
+    "Hyperliquid L1": "#00FFCC",
+    "Base": "#0052FF",
+    "Others": "#64748B",
   }
 }

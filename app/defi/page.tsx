@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import StablecoinAreaChart from '@/components/defi/StablecoinAreaChart'
 import StablecoinDominanceChart from '@/components/defi/StablecoinDominanceChart'
+import StablecoinChainChart from '@/components/defi/StablecoinChainChart'
 
 interface PreparedStablecoinRow {
   date: string
@@ -19,10 +20,15 @@ interface StablecoinCirculatingRow {
   circulating: number
 }
 
+interface ChainCirculatingRow{
+  chain: string 
+  circulating: number
+}
+
 export default function DefiPage() {
   const [preparedStablecoinData, setPreparedStablecoinData] = useState<PreparedStablecoinRow[]>([])
   const [stablecoinCirculatingData, setStablecoinCirculatingData] = useState<StablecoinCirculatingRow[]>([])
-  const [stablecoinChainData, setStablecoinChainData] = useState<StablecoinCirculatingRow[]>([])
+  const [stablecoinChainData, setStablecoinChainData] = useState<ChainCirculatingRow[]>([])
 
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -52,15 +58,15 @@ export default function DefiPage() {
           throw new Error("Couldn't load circulating stablecoin data")
         }
 
-        // const stablecoinChainDataResponse = await fetch(`${apiUrl}/api/defi-stablecoin-chains`)
-        // const stablecoinChainDataResult = await stablecoinChainDataResponse.json()
+        const stablecoinChainDataResponse = await fetch(`${apiUrl}/api/defi-stablecoin-chains`)
+        const stablecoinChainDataResult = await stablecoinChainDataResponse.json()
         
-        // if (stablecoinChainDataResult.success && stablecoinChainDataResult.data) {
-        //   setStablecoinChainData(stablecoinChainDataResult.data)
-        // } else {
-        //   setError('Erro ao carregar dados das stablecoins')
-        //   throw new Error("Couldn't load stablecoin chain data.")
-        // }
+        if (stablecoinChainDataResult.success && stablecoinChainDataResult.data) {
+          setStablecoinChainData(stablecoinChainDataResult.data)
+        } else {
+          setError('Erro ao carregar dados das stablecoins')
+          throw new Error("Couldn't load stablecoin chain data.")
+        }
 
       } catch (err) {
         console.error('Falha na requisição:', err)
@@ -86,6 +92,7 @@ export default function DefiPage() {
               <StablecoinAreaChart data={preparedStablecoinData} />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <StablecoinDominanceChart data = {stablecoinCirculatingData}/>
+                <StablecoinChainChart data = {stablecoinChainData}/>
               </div>
             </div>
           </>
