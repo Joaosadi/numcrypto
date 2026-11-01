@@ -339,5 +339,21 @@ def get_stablecoin_chains():
         final_df = pd.concat([top_6, row_others], ignore_index=True)
     else:
         final_df = top_6
-    final_df.to_html("finaldf.html")
     return {"success": "true", "data": final_df.to_dict(orient="records")}
+
+
+@app.get("/api/defi-stablecoin-prices")
+def get_stablecoin_prices():
+    url = "https://stablecoins.llama.fi/stablecoinprices"
+    response = requests.get(url)
+    data = response.json()
+    df_list = []
+    STABLECOINS = ["USDT","USDC", "DAI", "USDS", "USD1", "USDE", "PYUSD"]
+    for d in data:
+        date = d["date"]
+        coins = pd.DataFrame(list(d["prices"].items()), columns = ["stablecoin", "price"])
+        coins["date"] = date
+        df_list.append(coins)
+    df = pd.concat(df_list)
+    df = df[df["stablecoin"].str.upper().isin(STABLECOINS)]
+    return {"success": "true", "data": df.to_dict(orient="records")}

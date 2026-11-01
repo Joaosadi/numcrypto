@@ -286,6 +286,19 @@ def get_stablecoin_historical_data(id="1"):
             dictlist.append({"date": pd.to_datetime(int(d["date"]), unit="s"), "circulating": circ})
         return pd.DataFrame(dictlist)
 
+def get_stablecoin_circulating_data():
+    url = "https://stablecoins.llama.fi/stablecoins"
+    response = requests.get(url)
+    data = response.json()["peggedAssets"]
+    dict_list = []
+    for coin in data:
+        # for some reason this is very confusing to work
+        circ = list(coin["circulating"].values())[0]
+        d = {"id": coin["id"], "name": coin["name"], "symbol": coin["symbol"], "circulating": circ}
+        dict_list.append(d)
+    df = pd.DataFrame(dict_list)
+    return df
+
 def prepare_top_stablecoin_data(df, nstables = 6):
     df_sorted = df.sort_values("circulating", ascending = False).head(nstables)
     series_dict = dict()
@@ -333,7 +346,6 @@ if __name__ == "__main__":
     df = get_log_returns(df)
     df = calculate_volatility_metrics(df)
     df = calculate_garch_volatility(df)
-    # df.to_html("df.html")
     update_btc_daily(df)
     df_stables = get_stablecoin_circulating_data()
     prepared_data = prepare_top_stablecoin_data(df_stables)
