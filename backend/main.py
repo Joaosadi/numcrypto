@@ -16,7 +16,10 @@ app = FastAPI(title="numcrypto API", version="1.0")
 # Libera o CORS para o Next.js conseguir conversar com o FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://numcrypto.vercel.app"],
+    allow_origins=["http://localhost:3000", 
+                   "https://numcrypto.vercel.app",
+                   "https://numcrypto.io",
+                    "https://www.numcrypto.io"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
