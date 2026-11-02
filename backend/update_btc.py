@@ -333,11 +333,39 @@ def update_table(df, table):
         
         # Converte o pedaço do DataFrame para uma lista de dicionários serializáveis
         batch = batch_df.to_dict(orient="records")
-        
-        response = supabase.table(table).upsert(batch, on_conflict="date, symbol").execute()
+
+        if "symbol" in df.columns:
+            response = supabase.table(table).upsert(batch, on_conflict="date, symbol").execute()
+        else:
+            response = supabase.table(table).upsert(batch, on_conflict="date, stablecoin").execute()
         print(f"Inseridos/Atualizados registros de {i} até {i + len(batch)} na tabela {table}")
 
-        
+def get_stablecoin_prices():
+    url = "https://stablecoins.llama.fi/stablecoinprices"
+    response = requests.get(url)
+    data = response.json()
+    df_list = []
+    # STABLECOINS = ["USDT","USDC", "DAI", "USDS", "USD1", "USDE", "PYUSD"]
+    STABLECOINS = ["TETHER","USD-COIN", "DAI", "USDS", "USD1", "ETHENA-USDE", "USD1-WLFI"]
+    for d in data:
+        date = d["date"]
+        coins = pd.DataFrame(list(d["prices"].items()), columns = ["stablecoin", "price"])
+        coins["date"] = date
+        df_list.append(coins)
+    df = pd.concat(df_list)
+    # # Abre o arquivo no modo de escrita ('w') com codificação UTF-8
+    # with open("columns", "w", encoding="utf-8") as arquivo:
+    #     for texto in df["stablecoin"].unique():
+    #         # Escreve cada item seguido de uma quebra de linha (\n)
+    #         arquivo.write(texto + "\n")
+    df = df[df["stablecoin"].str.upper().isin(STABLECOINS)]
+    df = df[df["date"] != 0]
+    # 1. Converte de segundos para datetime do Pandas
+    df["date"] = pd.to_datetime(df["date"], unit='s', utc=True)
+
+    # 2. Formata para o padrão string ISO aceito pelo Supabase
+    df["date"] = df["date"].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    return df
 
 if __name__ == "__main__":
     update_missing_candles()
@@ -350,3 +378,5 @@ if __name__ == "__main__":
     df_stables = get_stablecoin_circulating_data()
     prepared_data = prepare_top_stablecoin_data(df_stables)
     update_table(prepared_data, "prepared_stablecoin_data")
+    stable_prices = get_stablecoin_prices()
+    update_table(stable_prices, "stablecoin_prices")
