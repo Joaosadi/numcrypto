@@ -79,12 +79,6 @@ export default function Sidebar() {
             )
           })}
         </nav>
-
-        {/* Rodapé da Sidebar */}
-        <div className="p-4 border-t border-gray-800 text-xs text-gray-500 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span></span>
-        </div>
       </aside>
     </>
   )

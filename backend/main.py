@@ -34,6 +34,33 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def fetch_table(table, columns):
+    try:
+        all_data = []
+        batch_size = 1000
+        start = 0
+        
+        while True:
+            response = supabase.table(table) \
+                .select(columns) \
+                .range(start, start + batch_size - 1) \
+                .execute()
+            
+            chunk = response.data
+            if not chunk:
+                break
+                
+            all_data.extend(chunk)
+            
+            if len(chunk) < batch_size:
+                break
+                
+            start += batch_size
+
+        return {"success": True, "data": all_data}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 def fetch_btc_price():
     try:
         all_data = []
@@ -344,19 +371,37 @@ def get_stablecoin_chains():
         final_df = top_6
     return {"success": "true", "data": final_df.to_dict(orient="records")}
 
-
+    
 @app.get("/api/defi-stablecoin-prices")
-def get_stablecoin_prices():
-    url = "https://stablecoins.llama.fi/stablecoinprices"
-    response = requests.get(url)
-    data = response.json()
-    df_list = []
-    STABLECOINS = ["USDT","USDC", "DAI", "USDS", "USD1", "USDE", "PYUSD"]
-    for d in data:
-        date = d["date"]
-        coins = pd.DataFrame(list(d["prices"].items()), columns = ["stablecoin", "price"])
-        coins["date"] = date
-        df_list.append(coins)
-    df = pd.concat(df_list)
-    df = df[df["stablecoin"].str.upper().isin(STABLECOINS)]
-    return {"success": "true", "data": df.to_dict(orient="records")}
+def get_stablecoin_prices(symbol: str = Query(default=None, description="Stablecoin filter")):
+    try:
+        all_data = []
+        batch_size = 1000
+        start = 0
+        
+        while True:
+            # Monta a base da query
+            query = supabase.table("stablecoin_prices") \
+                .select("date, stablecoin, price")
+            
+            # Se um símbolo foi informado na query string, aplica o filtro (convertendo para maiúsculo para garantir compatibilidade)
+            if symbol:
+                query = query.eq("stablecoin", symbol)
+            
+            # Executa a paginação
+            response = query.range(start, start + batch_size - 1).execute()
+            
+            chunk = response.data
+            if not chunk:
+                break
+                
+            all_data.extend(chunk)
+            
+            if len(chunk) < batch_size:
+                break
+                
+            start += batch_size
+
+        return {"success": True, "data": all_data}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
