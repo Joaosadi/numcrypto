@@ -26,12 +26,39 @@ interface ChainCirculatingRow{
   circulating: number
 }
 
+// many types definitions for the stablecoin prices distribution
+interface HistogramPoint {
+  bin_center: number
+  density: number
+}
+
+interface PdfPoint {
+  x: number
+  pdf: number
+}
+
+interface Metrics {
+  degrees_of_freedom: number
+  mean: number
+  scale: number
+  ci_95_lower: number
+  ci_95_upper: number
+}
+
+interface StablecoinDistributionData {
+  histogram: HistogramPoint[]
+  fitted_t_student: PdfPoint[]
+  metrics: Metrics
+}
+
+type HistogramsState = Record<string, StablecoinDistributionData>
+
 export default function DefiPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
   const [preparedStablecoinData, setPreparedStablecoinData] = useState<PreparedStablecoinRow[]>([])
   const [stablecoinCirculatingData, setStablecoinCirculatingData] = useState<StablecoinCirculatingRow[]>([])
   const [stablecoinChainData, setStablecoinChainData] = useState<ChainCirculatingRow[]>([])
-  const [histograms, setHistograms] = useState<Record<string, any[]>>({})
+  const [histograms, setHistograms] = useState<HistogramsState>({})
   // stablecoins for the price histograms charts
   const STABLECOINS = ["TETHER","USD-COIN", "DAI", "USDS", "ETHENA-USDE", "USD1-WLFI"]
 
@@ -122,10 +149,10 @@ export default function DefiPage() {
 
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-                Distribuição de Preços das Stablecoins
+                Stablecoins Price Distribution
               </h1>
               <p className="text-gray-400 mt-2">
-                Análise de frequência dos desvios de preço em relação à paridade de $1.00.
+                Price frequency in relation to the $1.00 peg.
               </p>
             </div>
 
