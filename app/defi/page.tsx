@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import StablecoinAreaChart from '@/components/defi/StablecoinAreaChart'
 import StablecoinDominanceChart from '@/components/defi/StablecoinDominanceChart'
 import StablecoinChainChart from '@/components/defi/StablecoinChainChart'
+import StablecoinHistogramChart from '@/components/defi/StablecoinHistogramChart'
 
 interface PreparedStablecoinRow {
   date: string
@@ -26,9 +27,13 @@ interface ChainCirculatingRow{
 }
 
 export default function DefiPage() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
   const [preparedStablecoinData, setPreparedStablecoinData] = useState<PreparedStablecoinRow[]>([])
   const [stablecoinCirculatingData, setStablecoinCirculatingData] = useState<StablecoinCirculatingRow[]>([])
   const [stablecoinChainData, setStablecoinChainData] = useState<ChainCirculatingRow[]>([])
+  const [histograms, setHistograms] = useState<Record<string, any[]>>({})
+  // stablecoins for the price histograms charts
+  const STABLECOINS = ["TETHER","USD-COIN", "DAI", "USDS", "ETHENA-USDE", "USD1-WLFI"]
 
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +41,7 @@ export default function DefiPage() {
   useEffect(() => {
     async function fetchStablecoinData() {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 
         const preparedDataResponse = await fetch(`${apiUrl}/api/defi-prepared-stablecoin-data`)
         const preparedDataResult = await preparedDataResponse.json()
@@ -76,7 +81,26 @@ export default function DefiPage() {
       }
     }
 
+    async function loadHistograms() {
+      for (const coin of STABLECOINS) {
+        try {
+          const res = await fetch(
+            `${apiUrl}/api/defi-stablecoin-prices?symbol=${coin.toLowerCase()}`
+          )
+          const json = await res.json()
+          if (json.success) {
+            setHistograms(prev => ({ ...prev, [coin]: json.data }))
+          }
+        } catch (err: any) {
+          if (err.name === 'AbortError') return
+          console.error(`Erro no histograma de ${coin}:`, err)
+        }
+      }
+    }
+
     fetchStablecoinData()
+
+    loadHistograms()
   }, [])
   return (
       <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12">
@@ -94,6 +118,29 @@ export default function DefiPage() {
                 <StablecoinDominanceChart data = {stablecoinCirculatingData}/>
                 <StablecoinChainChart data = {stablecoinChainData}/>
               </div>
+            </div>
+
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
+                Distribuição de Preços das Stablecoins
+              </h1>
+              <p className="text-gray-400 mt-2">
+                Análise de frequência dos desvios de preço em relação à paridade de $1.00.
+              </p>
+            </div>
+
+            {/* Grid responsivo para acomodar os 6 gráficos (3 colunas em telas grandes) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {STABLECOINS.map((coin) => (
+                <StablecoinHistogramChart
+                  key={coin}
+                  title={`${coin} Price Distribution`}
+                  stablecoin={coin}
+                  histogram={histograms[coin].histogram || []}
+                  fittedPdf={histograms[coin].fitted_t_student || []}
+                  metrics={histograms[coin].metrics || []}
+                />
+              ))}
             </div>
           </>
         )}

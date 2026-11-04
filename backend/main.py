@@ -371,7 +371,49 @@ def get_stablecoin_chains():
         final_df = top_6
     return {"success": "true", "data": final_df.to_dict(orient="records")}
 
-    
+
+def process_return_distribution(price_series, num_bins=30):
+    """Calcula os bins do histograma e o ajuste t-Student para os dados."""
+    values = price_series.dropna().values
+    if len(values) == 0:
+        return {"histogram": [], "fitted_t_student": [], "metrics": {}}
+
+    # 1. Cálculo do Histograma
+    counts, bin_edges = np.histogram(values, bins=num_bins, density=True)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+    histogram = [
+        {"bin_center": float(b), "frequency": float(c)} 
+        for b, c in zip(bin_centers, counts)
+    ]
+
+    # 2. Ajuste opcional t-Student (mantendo a robustez estatística)
+    fitted_t = []
+    metrics = {}
+    try:
+        df_param, loc_param, scale_param = stats.t.fit(values)
+        x_pdf = np.linspace(values.min(), values.max(), 200)
+        y_pdf = stats.t.pdf(x_pdf, df=df_param, loc=loc_param, scale=scale_param)
+        ci_lower, ci_upper = stats.t.interval(0.95, df=df_param, loc=loc_param, scale=scale_param)
+
+        fitted_t = [{"x": float(x), "pdf": float(y)} for x, y in zip(x_pdf, y_pdf)]
+        metrics = {
+            "degrees_of_freedom": float(df_param),
+            "mean": float(loc_param),
+            "scale": float(scale_param),
+            "ci_95_lower": float(ci_lower),
+            "ci_95_upper": float(ci_upper)
+        }
+    except Exception as e:
+        print(f"Aviso no fit t-Student: {e}")
+        return {}
+
+    return {
+        "histogram": histogram,
+        "fitted_t_student": fitted_t,
+        "metrics": metrics
+    }
+
 @app.get("/api/defi-stablecoin-prices")
 def get_stablecoin_prices(symbol: str = Query(default=None, description="Stablecoin filter")):
     try:
@@ -382,7 +424,7 @@ def get_stablecoin_prices(symbol: str = Query(default=None, description="Stablec
         while True:
             # Monta a base da query
             query = supabase.table("stablecoin_prices") \
-                .select("date, stablecoin, price")
+                .select("date, price")
             
             # Se um símbolo foi informado na query string, aplica o filtro (convertendo para maiúsculo para garantir compatibilidade)
             if symbol:
@@ -401,7 +443,15 @@ def get_stablecoin_prices(symbol: str = Query(default=None, description="Stablec
                 break
                 
             start += batch_size
-
-        return {"success": True, "data": all_data}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        print(f"Error: {e}")
+        {"success": "false", "data": None}
+
+    df = pd.DataFrame(all_data)
+    if df.empty:
+        return {"success": "false", "symbol": symbol, "data": {}}
+    df["price"] = pd.to_numeric(df["price"])
+    return {"success": "true", "symbol": symbol, "data": process_return_distribution(df["price"])}
+
+
+    
