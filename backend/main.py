@@ -499,4 +499,23 @@ def fetch_fred_macro_data(start_date="2006-01-01", end_date=None):
 @app.get("/api/macro-fred-indicators")
 def get_fred_indicators():
     fred_data = fetch_fred_macro_data()
-    btc_data = fetch_btc_price()
+    btc_data = pd.DataFrame(fetch_btc_price()["data"])
+    fred_data.index = pd.to_datetime(fred_data.index, utc=False).tz_localize(None).normalize()
+    fred_data.index.name = "date"
+    
+    btc_data["date"] = (
+        pd.to_datetime(btc_data["time_close"], utc=True, format="mixed")
+        .dt.tz_convert("UTC")
+        .dt.tz_localize(None)
+        .dt.normalize()
+    )
+    btc = (
+        btc_data.rename(columns={"close": "btc_close"})
+        .groupby("date", as_index=True)[["btc_close"]]
+        .last()
+        .sort_index()
+    )
+    
+    merged = fred_data.join(btc, how="inner")
+    merged = merged.reset_index()
+    return {"success": "true", "data": merged.to_dict(orient="records")}
