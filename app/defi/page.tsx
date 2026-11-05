@@ -66,69 +66,55 @@ export default function DefiPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchStablecoinData() {
-      try {
+  const controller = new AbortController()
+  const { signal } = controller
 
+  async function getJson(path: string) {
+    const res = await fetch(`${apiUrl}${path}`, { signal })
+    if (!res.ok) throw new Error(`${path} retornou ${res.status}`)
+    const json = await res.json()
+    if (!json.success || !json.data) throw new Error(`${path} sem dados`)
+    return json.data
+  }
 
-        const preparedDataResponse = await fetch(`${apiUrl}/api/defi-prepared-stablecoin-data`)
-        const preparedDataResult = await preparedDataResponse.json()
+  async function load() {
+    try {
+      const [prepared, circulating, chains] = await Promise.all([
+        getJson('/api/defi-prepared-stablecoin-data'),
+        getJson('/api/defi-stablecoin-circulating'),
+        getJson('/api/defi-stablecoin-chains'),
+      ])
+      setPreparedStablecoinData(prepared)
+      setStablecoinCirculatingData(circulating)
+      setStablecoinChainData(chains)
 
-        if (preparedDataResult.success && preparedDataResult.data) {
-          setPreparedStablecoinData(preparedDataResult.data)
-        } else {
-          setError("Couldn't load prepared stablecoin data")
-          throw new Error("Couldn't load prepared stablecoin data")
-        }
-
-        const stablecoinCirculatingDataResponse = await fetch(`${apiUrl}/api/defi-stablecoin-circulating`)
-        const stablecoinCirculatingDataResult = await stablecoinCirculatingDataResponse.json()
-
-        if (stablecoinCirculatingDataResult.success && stablecoinCirculatingDataResult.data) {
-          setStablecoinCirculatingData(stablecoinCirculatingDataResult.data)
-        } else {
-          setError("Couldn't load circulating stablecoin data")
-          throw new Error("Couldn't load circulating stablecoin data")
-        }
-
-        const stablecoinChainDataResponse = await fetch(`${apiUrl}/api/defi-stablecoin-chains`)
-        const stablecoinChainDataResult = await stablecoinChainDataResponse.json()
-        
-        if (stablecoinChainDataResult.success && stablecoinChainDataResult.data) {
-          setStablecoinChainData(stablecoinChainDataResult.data)
-        } else {
-          setError('Erro ao carregar dados das stablecoins')
-          throw new Error("Couldn't load stablecoin chain data.")
-        }
-
-      } catch (err) {
-        console.error('Falha na requisição:', err)
-        setError('Não foi possível conectar ao backend.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    async function loadHistograms() {
-      for (const coin of STABLECOINS) {
-        try {
-          const res = await fetch(
-            `${apiUrl}/api/defi-stablecoin-prices?symbol=${coin.toLowerCase()}`
+      const results = await Promise.allSettled(
+        STABLECOINS.map(async (coin) => {
+          const data = await getJson(
+            `/api/defi-stablecoin-prices?symbol=${coin.toLowerCase()}`
           )
-          const json = await res.json()
-          if (json.success) {
-            setHistograms(prev => ({ ...prev, [coin]: json.data }))
-          }
-        } catch (err: any) {
-          if (err.name === 'AbortError') return
-          console.error(`Erro no histograma de ${coin}:`, err)
-        }
+          return [coin, data] as const
+        })
+      )
+
+      const next: Record<string, any> = {}
+      for (const r of results) {
+        if (r.status === 'fulfilled') next[r.value[0]] = r.value[1]
+        else console.error('Erro no histograma:', r.reason)
       }
+      setHistograms(next)
+    } catch (err: any) {
+      if (err.name === 'AbortError') return
+      console.error('Falha na requisição:', err)
+      setError('Não foi possível carregar os dados.')
+    } finally {
+      if (!signal.aborted) setLoading(false)
     }
+  }
 
-    fetchStablecoinData()
-
-    loadHistograms()
-  }, [])
+  load()
+  return () => controller.abort()
+}, [apiUrl])
   return (
       <main className="min-h-screen bg-gray-950 text-white p-6 md:p-12">
         <h1 className="text-2xl font-bold mb-6">DeFi Dashboard</h1>
