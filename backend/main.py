@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import requests
+import pandas_datareader.data as web
+import datetime
 
 # Carrega as variáveis do arquivo .env local do python
 load_dotenv()
@@ -454,4 +456,47 @@ def get_stablecoin_prices(symbol: str = Query(default=None, description="Stablec
     return {"success": "true", "symbol": symbol, "data": process_return_distribution(df["price"])}
 
 
-    
+# macroeconomy page endpoints
+
+def fetch_fred_macro_data(start_date="2006-01-01", end_date=None):
+    """Fetches macro data series from FRED without needing an API key.
+
+    Series:
+    - DTWEXBGS: US Dollar Index (Nominal Broad Dollar Index)
+    - DGS10: 10-Year Treasury Constant Maturity Rate
+    - WALCL: Federal Reserve Total Assets (Fed Balance Sheet)
+    - T10Y2Y: 10-Year Treasury Constant Maturity Minus 2-Year Constant Maturity
+    """
+    if end_date is None:
+        end_date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    series_mapping = {
+        "DTWEXBGS": "dxy",
+        "DGS10": "us_10y_yield",
+        "WALCL": "fed_balance_sheet",
+        "T10Y2Y": "yield_curve_slope",
+    }
+
+    tickers = list(series_mapping.keys())
+
+    try:
+        # Pull data directly from FRED
+        df_raw = web.DataReader(tickers, "fred", start_date, end_date)
+        df = df_raw.rename(columns=series_mapping)
+    except Exception as e:
+        print(f"Error fetching data from FRED: {e}")
+        return pd.DataFrame()
+
+    # Create daily calendar grid to handle weekend/holiday gaps & low-frequency metrics
+    full_idx = pd.date_range(start=start_date, end=end_date, freq="D")
+    df = df.reindex(full_idx)
+
+    # Forward-fill macro data (Fed Balance sheet is weekly, markets close on weekends)
+    df = df.ffill().bfill()
+
+    return df
+
+@app.get("/api/macro-fred-indicators")
+def get_fred_indicators():
+    fred_data = fetch_fred_macro_data()
+    btc_data = fetch_btc_price()

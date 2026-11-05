@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, TrendingUp, Activity, BarChart2, Menu, X , Coins} from 'lucide-react'
+import { Home, TrendingUp, Activity, BarChart2, Menu, X , Coins, DollarSign} from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -14,6 +14,7 @@ export default function Sidebar() {
     { name: 'Home', href: '/', icon: Home },
     { name: 'BTC Price & Regression', href: '/btcprice', icon: TrendingUp },
     { name: 'Defi', href: '/defi', icon: Coins },
+    { name: 'Macroeconomy', href: '/macroeconomy', icon: DollarSign },
   ]
 
   const closeSidebar = () => setIsOpen(false)

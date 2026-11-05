@@ -1,19 +1,14 @@
 // components/ReturnDistributionChart.tsx
 'use client'
 
-import { useMemo } from 'react'
 import {
   ResponsiveContainer,
-  ComposedChart,
+  BarChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
-  ReferenceLine,
-  Legend,
-  BarChart
+  CartesianGrid
 } from 'recharts'
 
 interface HistogramPoint {
@@ -49,16 +44,13 @@ export default function ReturnDistributionChart({
   fittedPdf,
   metrics
 }: ReturnDistributionProps) {
-  
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-xl space-y-4 w-full">
-      {/* Cabeçalho e Métricas Resumidas */}
+      {/* Cabeçalho e Métricas Resumidas (Ficam sempre visíveis) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
-        <div>
-          <h3 className="text-base font-semibold text-white tracking-wider uppercase">
-            {title || `${stablecoin} Price Distribution`}
-          </h3>
-        </div>
+        <h3 className="text-base font-semibold text-white tracking-wider uppercase">
+          {title || `${stablecoin} Price Distribution`}
+        </h3>
 
         {/* Badge do Intervalo de Confiança 95% */}
         {metrics?.ci_95_lower !== undefined && metrics?.ci_95_upper !== undefined && (
@@ -71,7 +63,7 @@ export default function ReturnDistributionChart({
         )}
       </div>
 
-      {/* Corpo do Gráfico */}
+      {/* Corpo do Gráfico com Altura Fixa Correta */}
       <div className="w-full h-[320px]">
         {!histogram || histogram.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500 text-sm">
