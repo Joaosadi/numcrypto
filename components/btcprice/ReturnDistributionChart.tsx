@@ -119,7 +119,7 @@ export default function ReturnDistributionChart({
                 dataKey="bin_center"
                 stroke="#9CA3AF"
                 tick={{ fontSize: 11 }}
-                tickFormatter={(val) => Number(val).toFixed(3)}
+                tickFormatter={(val) => `${(Number(val) * 100).toFixed(1)}%`}
               />
               <YAxis
                 stroke="#9CA3AF"

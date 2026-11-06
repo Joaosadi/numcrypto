@@ -206,7 +206,7 @@ def get_btc_returns(years: int = Query(default=4, ge=1, le=10)):
 
 
 
-def process_return_distribution(returns_series, num_bins=50):
+def process_return_distribution(returns_series, num_bins=200):
     # Remove valores nulos do histórico
     returns = returns_series.dropna().values
 
@@ -250,7 +250,7 @@ def get_btc_return_distribution():
     df_returns = pd.DataFrame(res.data)["log_return"]
 
     payload = process_return_distribution(df_returns)
-    return {"success": True, "data": payload}
+    return {"success": "true", "data": payload}
 
 @app.get("/api/defi-prepared-stablecoin-data")
 def get_prepared_stablecoin_data():
@@ -291,9 +291,9 @@ def get_prepared_stablecoin_data():
         df = df.sort_values(by=['date', 'symbol'])
         result_data = df.to_dict(orient="records")
 
-        return {"success": True, "data": result_data}
+        return {"success": "true", "data": result_data}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": "false", "error": str(e)}
 
 @app.get("/api/defi-stablecoin-circulating")
 def get_stablecoin_circulating():
