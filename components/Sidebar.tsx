@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, TrendingUp, Activity, BarChart2, Menu, X , Coins, DollarSign} from 'lucide-react'
+import Image from 'next/image'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -51,10 +52,25 @@ export default function Sidebar() {
       >
         {/* Logo / Título do App (Visível no Desktop) */}
         <div className="p-6 border-b border-gray-800 hidden md:block">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-            NumCrypto
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">Quant Dashboard</p>
+          <div className="flex items-center gap-3">
+            {/* Caixa do ícone */}
+              <Image 
+                src="/favicon.ico" 
+                alt="NumCrypto Logo" 
+                width={32} 
+                height={32}
+                className="object-contain"
+              />
+
+            
+            {/* Título e Subtítulo */}
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent leading-tight">
+                NumCrypto
+              </h1>
+              <p className="text-xs text-gray-400">Quant Dashboard</p>
+            </div>
+          </div>
         </div>
 
         {/* Links de Navegação */}
