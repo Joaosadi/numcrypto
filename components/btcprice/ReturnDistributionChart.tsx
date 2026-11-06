@@ -12,7 +12,8 @@ import {
   Tooltip,
   CartesianGrid,
   ReferenceLine,
-  Legend
+  Legend,
+  BarChart
 } from 'recharts'
 
 interface HistogramPoint {
@@ -72,68 +73,16 @@ export default function ReturnDistributionChart({
     fetchReturns()
   }, [])
 
-  // Mapeia e arredonda os dados para alinhar o histograma e a curva t-Student
-  const chartData = useMemo(() => {
-    if (!Data) return []
-
-    const map = new Map<string, { label: string; rawX: number; density?: number; pdf?: number }>()
-
-    Data.histogram.forEach((h) => {
-      const label = `${(h.bin * 100).toFixed(1)}%`
-      map.set(label, {
-        ...map.get(label),
-        label,
-        rawX: h.bin,
-        density: h.density
-      })
-    })
-
-    Data.fitted_t_student.forEach((p) => {
-      const label = `${(p.x * 100).toFixed(1)}%`
-      const existing = map.get(label)
-      if (existing) {
-        existing.pdf = p.pdf
-      } else {
-        map.set(label, {
-          label,
-          rawX: p.x,
-          pdf: p.pdf
-        })
-      }
-    })
-
-    return Array.from(map.values()).sort((a, b) => a.rawX - b.rawX)
-  }, [Data])
-
   if (loading) {
-    return <div className="text-center text-gray-400 py-12">Calculando ajustes da distribuição t-Student...</div>
+    return <div className="text-center text-gray-400 py-12">Gathering data...</div>
   }
 
   if (error || !Data) {
-    return <div className="text-center text-red-400 py-12">{error || 'Nenhum dado encontrado.'}</div>
+    return <div className="text-center text-red-400 py-12">{error || 'No data found.'}</div>
   }
 
-    const { metrics } = Data
+  const { metrics } = Data
 
-  // Função auxiliar para encontrar a categoria (label) mais próxima do valor de corte estatístico
-  const findClosestLabel = (targetValue: number) => {
-    if (!chartData.length) return ''
-    let closest = chartData[0]
-    let minDiff = Math.abs(chartData[0].rawX - targetValue)
-
-    for (const item of chartData) {
-      const diff = Math.abs(item.rawX - targetValue)
-      if (diff < minDiff) {
-        minDiff = diff
-        closest = item
-      }
-    }
-    return closest.label
-  }
-
-  // Usa o rótulo real que existe no eixo X para garantir que a ReferenceLine seja renderizada
-  const lowerCiLabel = findClosestLabel(metrics.ci_95_lower)
-  const upperCiLabel = findClosestLabel(metrics.ci_95_upper)
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl w-full max-w-full overflow-hidden flex flex-col space-y-4 h-[550px]">
@@ -158,32 +107,24 @@ export default function ReturnDistributionChart({
 
       {/* Corpo do Gráfico */}
       <div className="w-full h-[450px]">
-        {chartData.length === 0 ? (
+        {Data.histogram.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500">
-            Nenhum dado disponível para o cálculo da distribuição.
+            No data available.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 20 }}>
+            <BarChart data={Data.histogram} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-
-              {/* Eixo X Categórico */}
               <XAxis
-                dataKey="label"
+                dataKey="bin_center"
                 stroke="#9CA3AF"
                 tick={{ fontSize: 11 }}
-                interval="preserveStartEnd"
+                tickFormatter={(val) => Number(val).toFixed(3)}
               />
-
-              {/* Eixo Y para densidade de probabilidade */}
               <YAxis
-                yAxisId="left"
                 stroke="#9CA3AF"
-                domain={['auto', 'auto']}
                 tick={{ fontSize: 11 }}
-                tickFormatter={(val) => Number(val).toFixed(1)}
               />
-
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#1F2937',
@@ -192,62 +133,11 @@ export default function ReturnDistributionChart({
                   color: '#FFF',
                   fontSize: '12px'
                 }}
-                formatter={(val: any, name: any) => {
-                  if (val === undefined || val === null) return [null, null]
-                  const formattedVal = Number(val).toFixed(4)
-                  const label = name === 'density' ? 'Density (Histogram)' : 't-Student (Adjusted)'
-                  return [formattedVal, label]
-                }}
-                labelFormatter={(label) => `Retorno: ${label}`}
+                formatter={(val: any) => [`${Number(val).toFixed(2)}`, 'Density']}
+                labelFormatter={(label) => `Price: ${Number(label).toFixed(4)}`}
               />
-
-              <Legend
-                verticalAlign="bottom"
-                align="center"
-                wrapperStyle={{ paddingTop: '16px', fontSize: '12px', color: '#9CA3AF' }}
-              />
-
-              {/* Histograma de Retornos */}
-              <Bar
-                yAxisId="left"
-                dataKey="density"
-                name="density"
-                fill="#1000f7"
-                fillOpacity={0.65}
-                barSize={10}
-                isAnimationActive={false}
-              />
-
-              {/* Curva Teórica t-Student Ajustada (Linha) */}
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="pdf"
-                name="pdf"
-                stroke="#2bff00"
-                strokeWidth={2.5}
-                dot={false}
-                isAnimationActive={false}
-              />
-
-              {/* Linhas verticais do Intervalo de Confiança */}
-              <ReferenceLine
-                yAxisId="left"
-                x={lowerCiLabel}
-                stroke="#EF4444"
-                strokeDasharray="4 4"
-                strokeWidth={2}
-                label={{ value: 'IC 2.5%', fill: '#EF4444', position: 'top', fontSize: 10 }}
-              />
-              <ReferenceLine
-                yAxisId="left"
-                x={upperCiLabel}
-                stroke="#EF4444"
-                strokeDasharray="4 4"
-                strokeWidth={2}
-                label={{ value: 'IC 97.5%', fill: '#EF4444', position: 'top', fontSize: 10 }}
-              />
-            </ComposedChart>
+              <Bar dataKey="frequency" fill="#10B981" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         )}
       </div>
